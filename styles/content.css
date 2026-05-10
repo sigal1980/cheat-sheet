@@ -9,9 +9,9 @@ html, body {
 .menu {
   display: block;
   height: 100vh;
+  float: right;
 }
 
 .content {
-  float: left;
   height: 100vh;
 }
