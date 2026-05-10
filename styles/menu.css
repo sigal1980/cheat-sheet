@@ -1,4 +1,4 @@
-nav ul {
+iframe nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -6,17 +6,17 @@ nav ul {
   background-color: #f2f2f2;
 }
 
-nav ul li {
+iframe nav ul li {
   border-bottom: 1px solid #ccc;
 }
 
-nav ul li a {
+iframe nav ul li a {
   display: block;
   padding: 10px;
   color: #000;
   text-decoration: none;
 }
 
-nav ul li a:hover {
+iframe nav ul li a:hover {
   background-color: #ddd;
 }
