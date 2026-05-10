@@ -22,11 +22,11 @@ ul li ul li a {
 }
 
 ul li ul li ul li a {
-  padding-lrft: 40px;
+  padding-lrft: 30px;
 }
 
 ul li ul li ul li ul li a {
-  padding-lrft: 60px;
+  padding-lrft: 40px;
 }
 
 nav ul li a:hover {
