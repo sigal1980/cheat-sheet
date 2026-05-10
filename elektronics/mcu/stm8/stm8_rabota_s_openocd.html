@@ -1,24 +1,44 @@
-<h3>STM8 - работа с openocd.</h3>
-<p>Вся работа с openocd заключает в запуске ее с нужными параметрами:</p>
-<pre>
-  openocd -f interface/stlink.cfg -f target/stm8s103.cfg -c "init" -c "reset halt"
-</pre>
-<p>Немного поясню, что это значит. Первый параметр <b>-f interface/stlink.cfg</b> означает "использовать интерфейс st-link". Второй параметр <b>-f target/stm8s103.cfg</b> говорит о выборе МК stm8s103 для отладки. Можно также использовать stm8s.cfg. Вообще-то поройся в папках openocd. Там много чего интерессного. Последние два параметра - это команды. Команды инициализации, сброса и останова МК. почему поделены? Читай справку.</p>
-<p>Когда сервер запустится, он будет ждать подключения примерно с таким выводом:</p>
-<pre>
-  xPack Open On-Chip Debugger 0.12.0+dev-02228-ge5888bda3-dirty (2025-10-04-22:42)
-  Licensed under GNU GPL v2
-  For bug reports, read
-          http://openocd.org/doc/doxygen/bugs.html
-  srst_only separate srst_gates_jtag srst_open_drain connect_deassert_srst
-  Info : STLINK V2J37S7 (API v2) VID:PID 0483:3748
-  Info : Target voltage: 3.245273
-  Info : clock speed 800 kHz
-  Info : [stm8s.cpu] Examination succeed
-  Info : [stm8s.cpu] starting gdb server on 3333
-  Info : Listening on port 3333 for gdb connections
-  target halted due to debug-request, pc: 0x00008000
-  Info : Listening on port 6666 for tcl connections
-  Info : Listening on port 4444 for telnet connections
-</pre>
-<p>Как видно сервер ожидает подключения на порту 3333 и др. Данную консоль оставляем жить своей жизнью - не закрываем. Тут, пожалуй, пока все!</p>
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка - STM8 - работа с openocd</title>
+    <link rel=”icon” href=”/cheat-sheet/images/icon.png” type=”image/png”>
+    <link rel="stylesheet" href="/cheat-sheet/styles/content.css">
+  </head>
+  <body>
+    <div>
+      <div class="menu">
+        <iframe class="left-iframe" src="/cheat-sheet/left-menu.html"></iframe>
+      </div>
+      <div class="content">
+        <h3>STM8 - работа с openocd</h3>
+          <p>Вся работа с openocd заключает в запуске ее с нужными параметрами:</p>
+          <pre>
+            openocd -f interface/stlink.cfg -f target/stm8s103.cfg -c "init" -c "reset halt"
+          </pre>
+          <p>Немного поясню, что это значит. Первый параметр <b>-f interface/stlink.cfg</b> означает "использовать интерфейс st-link". Второй параметр <b>-f target/stm8s103.cfg</b> говорит о выборе МК stm8s103 для отладки. Можно также использовать stm8s.cfg. Вообще-то поройся в папках openocd. Там много чего интерессного. Последние два параметра - это команды. Команды инициализации, сброса и останова МК. почему поделены? Читай справку.</p>
+          <p>Когда сервер запустится, он будет ждать подключения примерно с таким выводом:</p>
+          <pre>
+            xPack Open On-Chip Debugger 0.12.0+dev-02228-ge5888bda3-dirty (2025-10-04-22:42)
+            Licensed under GNU GPL v2
+            For bug reports, read
+              http://openocd.org/doc/doxygen/bugs.html
+            srst_only separate srst_gates_jtag srst_open_drain connect_deassert_srst
+            Info : STLINK V2J37S7 (API v2) VID:PID 0483:3748
+            Info : Target voltage: 3.245273
+            Info : clock speed 800 kHz
+            Info : [stm8s.cpu] Examination succeed
+            Info : [stm8s.cpu] starting gdb server on 3333
+            Info : Listening on port 3333 for gdb connections    
+            target halted due to debug-request, pc: 0x00008000
+            Info : Listening on port 6666 for tcl connections
+            Info : Listening on port 4444 for telnet connections
+          </pre>
+          <p>Как видно сервер ожидает подключения на порту 3333 и др. Данную консоль оставляем жить своей жизнью - не закрываем. Тут, пожалуй, пока все!</p>
+      </div>
+    </div>
+  </body>
+</html>
+
