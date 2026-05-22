@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка - VPN через SSH: настройка туннеля с помощью systemd-networkd</title>
+    <link rel=”icon” href=”../../../images/icon.png” type=”image/png”>
+    <link rel="stylesheet" href="../../../styles/content.css">
+  </head>
+  <body>
+    <div>
+      <div class="menu">
+        <iframe class="left-iframe" src="../../../left-menu.html"></iframe>
+      </div>
+      <div class="content">
+        <h3>VPN через SSH: настройка туннеля с помощью systemd-networkd</h3>
+        <div class="main_text">
+          И так. Здесь шпаргалка по автоматическому поднятию туннеля tun.
+        </div>
+        <div class="main_text">
+          Сейчас объясню зачем это нужно. Я заметил, что при блокировке vpn используют, как мне кажется блокировку по начальному соединению. Когда трафик будет шифроваться, тогда будет уже поздно. Почему ssh? Ssh инструмент админов серверов. Многие серверы не имеют больше механизмов управления, кроме как ssh. Поэтому, мне кажется, его блокировать не будут. А если и будут, то не "наглухо". К сожалению я не увидел другого типа подключения в ssh, кроме проброса портов tun:tun. Опции -L, -R, -D мне не подошли, так как мне проще в дальнейшем работать с vps как сервером в другой подсети. И так. Начнем...
+        </div>
+        <div class="main_text">
+          Как всегда, в systemd-networkd для настройки используются файлы. Для создания виртуальных сетевых устройств используем файл <b>.netdev</b>. Эти файлы называем осмысленно и располагаем в <b>/etc/systemd/network/</b>.
+        </div>
+        <div class="main_text">
+          Ниже пример этого файл с пояснениями:
+          <div class="code">
+            [NetDev]<br>
+            Name=tun5<br>
+            Kind=tun<br>
+            [Tun]<br>
+            User=user_name<br>
+          </div>
+          <b>[NetDev] Name=tun5</b> - здесь указываем имя нашего tun-устройства. Я так понял, что можно оставить автовыбор (оставить пустым), но это имя будет использоваться в команде ssh. Поэтому даем ему имя.<br>
+          <b>[NetDev] Kind=tun</b> - это семейство, к которому относится создаваемое устройство. Есть множество виртуальных устройств, но нам нужен tun.<br>
+          <b>[Tun] User=user_name</b> - описывает кому разрешен доступ. Я вписал свой логин. root не обязателен.
+        </div>
+        <div class="main_text">
+          Настроек еще множество, устройств тоже, но мне нужны только эти.
+        </div>
+        <div class="main_text">
+          После сохранения файла не забываем дать понять systemd, что файл создан/обновлен:
+          <div class="code">
+            sudo systemctl daemon-reload
+          </div>
+          И также перегружаем systemd-networkd:
+          <div class="code">
+            sudo systemctl reload systemd-networkd.service
+          </div>
+        </div>
+        <div class="main_text">
+          По сути для создания tun-интерфейса этого достаточно. Далле нужно сделать сетевые настройки этого устройства. Для этого используем еще один файл .network. Желательно дать им одинаковые имена, чтобы видеть их связь с одним устройством. Например ssh-tun.netdev и ssh-tun.network.
+        </div>
+        <div class="main_text">
+          Пример файла .network:
+          <div class="code">
+            [Match]<br>
+            Name=tun5<br>
+            [Address]<br>
+            Address=192.168.1.2/24<br>
+            Peer=192.168.1.1/24<br>
+            [Network]<br>
+            Description="VPN over SSH"<br>
+            DHCP=no<br>
+            Address=192.168.1.2/24
+          </div>
+          <b>[Match] Name=tun5</b> - имя устройства, которое мы настраиваем<br>
+          <b>[Address] Address=192.168.1.2/24</b> - ip-адрес, который будет присвоен устройству<br>
+          <b>[Address] Peer=192.168.1.1/24</b> - ip-адрес, с которым будет связан туннель<br>
+          <b>[Network] Description="..."</b> - описание нашего устройства<br>
+          <b>[Network] DHCP=no</b> - выключаем получение адреса от dhcp-сервера<br>
+          <b>[Network] Address=192.168.1.2/24</b> - Адрес присвоенный устройству
+        </div>
+        <div class="main_text">
+          Сохраняем. Перегружаем демоны. В итоге получаем:
+          <div class="code">
+            ip a<hr>
+            1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+            <div class="code">
+              link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+            </div>
+            <div class="code">
+              inet 127.0.0.1/8 scope host lo
+              <div class="code">
+                valid_lft forever preferred_lft forever
+              </div>
+            </div>
+            2: enp3s0f0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000
+            <div class="code">
+              link/ether c0:3f:d5:ea:a1:83 brd ff:ff:ff:ff:ff:ff
+            </div>
+            <div class="code">
+              inet 192.168.0.253/24 brd 192.168.0.255 scope global enp3s0f0
+              <div class="code">
+                valid_lft forever preferred_lft forever
+              </div>
+            </div>
+            <div class="code">
+              inet6 fe80::c23f:d5ff:feea:a183/64 scope link
+              <div class="code">
+                valid_lft forever preferred_lft forever
+              </div>
+            </div>
+            3: <b style="color: red">tun5</b>: &lt;POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel <b style="color: red">state DOWN</b> group default qlen 500
+            <div class="code">
+              link/none
+            </div>
+            <div class="code">
+              inet <b style="color: red">192.168.1.2/24</b> brd 192.168.1.255 scope global tun5
+              <div class="code">
+                valid_lft forever preferred_lft forever
+              </div>
+              inet6 fe80::c652:28af:1aab:c3c0/64 scope link stable-privacy
+              <div class="code">
+                valid_lft forever preferred_lft forever
+              </div>
+            </div>
+          </div>
+          Появилось еще одно устройство. Выделил его. Также выделил <b>state DOWN</b>. Пока устройство не активно. После связывания туннелей через ssh, то есть подключения к серверу, будет <b>state UP</b>.
+        </div>
+        <div class="main_text">
+          Но об этом в следующей шпаргалке.
+        </div>
+      </div>
+  </body>
+</html>
+
