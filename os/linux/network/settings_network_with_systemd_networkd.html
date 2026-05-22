@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка - VPN через SSH: настройка сети с помощью systemd-networkd</title>
+    <link rel=”icon” href=”../../../images/icon.png” type=”image/png”>
+    <link rel="stylesheet" href="../../../styles/content.css">
+  </head>
+  <body>
+    <div>
+      <div class="menu">
+        <iframe class="left-iframe" src="../../../left-menu.html"></iframe>
+      </div>
+      <div class="content">
+        <h3>VPN через SSH: настройка сети с помощью systemd-networkd</h3>
+        <div class="main_text">
+          С чего начать? Начну с самого начала...
+        </div>
+        <div class="main_text">
+          Весна 2026 года. Россия. Москва. Вокруг сплошные блокировки. Все, что не популярно у программистов Яндекса, все блокируется. Какой выход? Ну, VPN... Может быть. Но и их уже дововльно просто блокируют. С осени прошлого года есть в наличии недорогой VPS. Вот его и решил использовать.
+        </div>
+        <div class="main_text">
+          Какие цели стоят:<br>
+          <div class="list">
+            <ul>
+              <li>
+                Доступ ко всем ресурсам
+              </li>
+              <li>
+                Доступ с компа и телефона
+              </li>
+          </div>
+          Пока стоял KDE - все было просто. Запускал <b>ssh -D</b>, в сетевых настройках proxy указывал на локальный порт и все работало. Но... Стоило сменить рабочий стол на lxde и все. Сразу скажу, что переменные прокси не работают так, как хотелось. Крутил и так, и сяк... Выход нашел один. Туннель до VPS + перенаправление трафика в этот туннель. Почему чистый systemd? Да устал тянуть весь хлам в систему "чтобы было проще". А по сути ни разу не проще. И так... Начнем!
+        </div>
+        <div class="main_text">
+          Первым-наперво хочу заметить, что этот демон (systemd-networkd) по умолчанию выключен. Во всяком случае у меня было так. Прежде, чем включать, его нужно настроить. Затем нужно отключить все утилиты, которые работают с настройками сети. Иначе может получиться проблема, когда они вместе начнут менять настройки. У меня был только network-manager (nmcli). Сначала отключил, а потом и удалил. Почему сначала настройка? nmcli, например, когда останавливается, то после перезапуска системы сети не будет. Это я проверил. ))))
+        </div>
+        <div class="main_text">
+          Данный демон забирает настройки, насколько я понял, из нескольких мест. Но я работал с каталогами:
+          <div class="code">
+            /etc/systemd/network/
+          </div>
+          Данный каталог у меня в системы был пустой. Ну, давайте начнем.
+        </div>
+        <div class="main_text">
+          Первым делом смотрим, какие интерфейсы уже есть в системе:
+          <div class="code">
+            ip a<hr>
+            1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000<br>
+            <div class="code">link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 inet 127.0.0.1/8 scope host lo valid_lft forever preferred_lft forever </div>
+            2: enp3s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+            <div class="code">link/ether c0:3f:d5:ea:a1:83 brd ff:ff:ff:ff:ff:ff</div>
+            <div class="code">inet 192.168.0.253/24 brd 192.168.0.255 scope global enp3s0f0 valid_lft forever preferred_lft forever</div>
+            <div class="code">inet6 fe80::c23f:d5ff:feea:a183/64 scope link valid_lft forever preferred_lft forever</div>
+          </div>
+        </div>
+        <div class="main_text">
+          И так. Вижу два  соединения:
+          <div class="code">
+            1: lo<br>
+            2: enp3s0f0
+          </div>
+          lo — это локальная петля, а вот enp3s0f0 — это сетевая карта. Как видим здесь уже есть адреса. Но когда я снес nmcli, то этот интерфейс не был настроен и соответственно сеть не работала.
+        </div>
+        <div class="main_text">
+          Идем в <b>/etc/systemd/network/</b>:
+          <div class="code">
+            cd /etc/systemd/network/
+          </div>
+          Тут создаем файл с понятным именем и постфиксом .network. Содержимое моего файла, при котором сеть заработала:
+          <div class="code">
+            [Match]<br>
+            Name=enp3s0f0<br>
+            [Network]<br>
+            Address=192.168.0.253/24<br>
+            Gateway=192.168.0.1<br>
+            [Route]<br>
+            Destination=192.168.0.0/24<br>
+            Gateway=192.168.0.1<br>
+            [Route]<br>
+            Destination=0.0.0.0/0<br>
+            Gateway=192.168.0.1<br>
+          </div>
+          Теперь подробнее о наполнении данного файла. В квадратных скобках буду указывать секцию, к которой относится параметр.
+        </div>
+        <div clas="main_text">
+          <b>[Match] Name</b> — это имя интерфейса, к которому будут применяться настройки. Если переименовать имя сетевой карты в udev, то скорее всего, после этого действия, карта не будет настроена.
+        </div>
+        <div class="main_text">
+          <b>[Network] Address</b> — здесь В РУЧНУЮ задаем адрес нашей карты.
+        </div>
+        <div class="main_text">
+          <b>[Network] Gateway</b> — адрес шлюза, который связывает машины в нашей локальной сети
+        </div>
+        <div class="main_text">
+          <b>[Route #1] Destination</b> — это локальный маршрут. То есть, когда пытаемся обратиться к устройству в локальной сети, данные пойдут через Gateway.
+        </div>
+        <div class="main_text">
+          <b>[Route #1] Gateway</b> — это адрес шлюза через который будет идти связь с локальной сетью. Говорят, что данный маршрут не нужен, так как в [Network] все есть, но… Пусть будет. )))
+        </div>
+        <div class="main_text">
+          <b>[Route #2] Destination</b> — указываем 0.0.0.0/0. Это будет маршрут по умолчанию. То есть, когда мы обратимся к адресу, отличному от нашей локальной сети, весь трафик пойдет на указанный шлюз. А он в свою очередь направит трафик на другой сети, который он знает.
+        </div>
+        <div class="main_text">
+          <b>[Route #2] Gateway</b> — адрес шлюза для маршрута по умолчанию (маршрут default).
+        </div>
+        <div class="main_text">
+          Ну, по сути все. Сеть настроена. Для файла .network есть еще множество параметров, но основные настройки уже есть.
+        </div>
+        <div class="main_text">
+          Как применить настройки к сети?
+        </div>
+        <div class="main_text">
+          Сначала включаем службу, то есть перегружаем демона systemd:
+          <div class="code">
+            sudo systemctl daemon-reload
+          </div>
+          Теперь добавляем сетевой демон в автозагрузку:
+          <div class="code">
+            sudo systemctl enable systemd-networkd.service
+          </div>
+          Можно сразу запустить его, добавив - - now или отдельной командой:
+          <div class="code">
+            sudo systemctl start systemd-networkd.service
+          </div>
+          Если внести изменения в файл .network, то применить изменения можно с помощью:
+          <div class="code">
+            sudo systemctl reload systemd-networkd.service
+          </div>
+          Не проходят изменения? Загляни в journalctl или перегрузи демона systemd, выключи и включи службу systemd-networkd с помощью:
+          <div class="code">
+            sudo systemctl stop systemd-network.service<br>
+            sudo systemctl start systemd-network.service
+          </div>
+          Первый этап окончен.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -21,3 +21,29 @@ html, body {
   margin-left: 170px;
   padding-left: 10px;
 }
+
+div.main_text {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+div.list {
+  padding: 5px 5px 5px 20px;
+  background-color: #dadada;
+}
+
+div.list ul {
+  padding: 0px;
+  list-style-type: decimal;
+  font-style: oblique;
+}
+
+div.code {
+  padding: 5px 0px 5px 20px;
+  background-color: #dadada;
+}
+
+div.code div.code {
+  padding: 0px 0px 0px 20px;
+  text-indent: -10px;
+}
