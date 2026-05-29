@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка - LightDM - автологин</title>
+    <link rel=”icon” href=”../../../images/icon.png” type=”image/png”>
+    <link rel="stylesheet" href="../../../styles/content.css">
+  </head>
+  <body>
+    <div>
+      <div class="menu">
+        <iframe class="left-iframe" src="../../../left-menu.html"></iframe>
+      </div>
+      <div class="content">
+        <h3>LightDM - автологин</h3>
+        <div class="main_text">
+          Отредактируйте файл конфигурации LightDM и убедитесь, что эти строки не закомментированы и правильно настроены:
+        <div class="code">
+          /etc/lightdm/lightdm.conf:
+          <div class="code">
+            [Seat:*]
+          </div>
+          <div class="code">
+            autologin-user=username
+          </div>
+        </div>
+      </div>
+      <div class="main_text">
+        Вы должны быть членом группы autologin, чтобы иметь возможность автоматически входить в систему без ввода пароля:
+        <div class="code">
+          <div class="code">
+            # groupadd -r autologin
+          </div>
+          <div class="code">
+            # gpasswd -a username autologin
+          </div>
+        </div>
+      </div>
+      <div class="main_text">
+        LightDM выполняет вход в систему, используя сеанс, указанный в ~/.dmrc пользователя, который автоматически входит в систему. Чтобы переопределить этот файл, укажите autologin-session в lightdm.conf:
+        <div class="code">
+          /etc/lightdm/lightdm.conf:
+          <div class="code">
+            [Seat:*]
+          </div>
+          <div class="code">
+            autologin-user=username
+          </div>
+          <div class="code">
+            autologin-session=session
+          </div>
+        </div>
+        <div class="main">
+          Список допустимых имен сеансов можно найти, указав /usr/share/xsessions/.desktop для сеансов X и /usr/share/wayland-sessions/.desktop для сеансов Wayland.
+        </div>
+        <div class="main_text">
+          <b>Включение интерактивного входа в систему без пароля</b>
+        </div>
+        <div class="main_text">
+          LightDM проходит через PAM, поэтому вы должны настроить конфигурацию lightdm в PAM:
+          <div class="code">
+            /etc/pam.d/lightdm:
+            <div class="code">
+              #%PAM-1.0
+            </div>
+            <div class="code">
+              auth sufficient pam_succeed_if.so user ingroup nopasswdlogin
+            </div>
+            <div class="code">
+              auth include system-login
+            </div>
+            <div class="code">
+              ...
+            </div>
+          </div>
+        </div>
+        <div class="main_text">
+          В этом случае вы также должны быть частью групп nopasswdlogin и autologin, чтобы иметь возможность интерактивного входа в систему без ввода пароля:
+          <div class="code">
+            <div class="code">
+              # groupadd -r nopasswdlogin
+            </div>
+            <div class="code">
+              # groupadd -r autologin
+            </div>
+            <div class="code">
+              # gpasswd -a username nopasswdlogin
+            </div>
+            <div class="code">
+              # gpasswd -a username autologin
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
