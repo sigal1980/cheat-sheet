@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка - Linux - миграция на другой носитель</title>
+    <link rel=”icon” href=”../../../images/icon.png” type=”image/png”>
+    <link rel="stylesheet" href="../../../styles/content.css">
+    <script src="../../../scripts/main.js" defer></script>
+  </head>
+  <body>
+    <div>
+      <div class="menu">
+        <iframe class="left-iframe" src="../../../left-menu.html" id="left_menu"></iframe>
+      </div>
+      <div class="content">
+        <h3>Linux - миграция на другой носитель</h3>
+        <div class="main_text">
+          Для миграции придется чуть поковырять систему. А именно:
+          <div class="code">
+            <div class="code">
+              - сделать бекап файлов и папок системы;
+            </div>
+            <div class="code">
+              - разметить и отформатировать новый диск;
+            </div>
+            <div class="code">
+              - скопировать бекап в желаемый раздел;
+            </div>
+            <div class="code">
+              - настроить загрузчик ОС.
+            </div>
+          </div>
+        </div>
+        <div class="main_text">
+          Все манипуляции производил с <span class="code">LiveCD Debian 13</span>. В принципе, подойдет любой другой дистрибутив. Вся работа будет в командной строке. Утилиты встроенные.
+        </div>
+        <div class="main_text">
+          <b>Загрузка и монтирование файловой системы</b>
+        </div>
+        <div class="main_text">
+          Вставляем носитель с <span class="code">LiveCD</span> и грузимся с него.
+        </div>
+        <div class="main_text">
+          Чтобы загрузиться с носителя, отличного от внутреннего накопителя ПК, нужно сразу после включения ПК войти в <span class="code">BIOS</span> и выбрать устройство для загрузки. Как это сделать, можно посмотреть в интернете.
+        </div>
+        <div class="main_text">
+          После того, как ПК загрузится с носителя, выбираем обычную загрузку livecd. Грузимся. Система загрузилась? Открываем консоль (командную строку). Мне открывать ничего не пришлось - мой livecd без графического интерфейса. Сразу появляется консоль.
+        </div>
+        <div class="main_text">
+          Так как все дальнейшие манипуляции требуют прав <span class="code">root</span>, то сразу входим под ним:
+          <div class="code">
+            sudo su
+          </div>
+        </div>
+        <div class="main_text">
+          Перед монтированием файловой системы, необходимо глянуть как распределились тома:
+          <div class="code">
+            lsblk
+          </div>
+          Команда выводит список блочных устройств
+          <div class="code">
+            <div class="code">
+              ...
+            </div>
+            <div class="code">
+              sda
+            </div>
+            <div class="code">
+              --sda1
+            </div>
+            <div class="code">
+              --sda2
+            </div>
+            <div class="code">
+              ...
+            </div>
+          </div>
+          В выводе команды нужно найти жесткий диск с его разделами. Обычно это sda, sdb,sdc и так далее. Более подробный вывод даст команда:
+          <div class="code">
+            fdisk -lu<hr>
+            <div class="code">
+              Disk /dev/sda: 20GiB, ...
+            </div>
+            <div class="code">
+              Disk model: ...
+            </div>
+            <div class="code">
+              ...
+            </div>
+            <div class="code">
+              Device ... Type
+            </div>
+            <div class="code">
+              /dev/sda1 ... 100M EFI System
+            </div>
+            <div class="code">
+              /dev/sda2 ... 10G Linux filesystem
+            </div>
+            <div class="code">
+              ...
+            </div>
+          </div>
+        </div>
+        <div class="main_text">
+          Здесь видно название диска, его емкость, модель. На диске имеется два раздела: <span class="code">/dev/sda1</span> и <span class="code">/dev/sda2</span>. Тип файловой системы sda1 - это EFI System. Тип sda2 - Linux filesystem. Сейчас нам нужен sda2, так как в него установлена корневая директория системы. Монируем раздел в <span class="code">/mnt</span>:
+          <div class="code">
+            mount /dev/sda2 /mnt
+          </div>
+        </div>
+        <div class="main_text">
+          <b>Бекап файлов и папок</b>
+        </div>
+        <div class="main_text">
+          Выбираем, что нам пригодится из данных пользователей. Можно сохранить все, но тогда потребуется временный носитель соответствующего размера. Я бы советовал не брать с собой кеши. На май месяц 2026 года кеши хранятся в:
+          <div class="code">
+            /home/&lt;user_name&gt;/.cache/
+          </div>
+        </div>
+        <div class="main_text">
+          Содержимое данной паки можно просто удалить или исключить из копирования.
+        </div>
+        <div class="main_text">
+          С данным определились. Для бекапа системы будем пользоваться встроенным инструментом:
+          <div class="code">
+            tar
+          </div>
+        </div>
+        <div class="main_text">
+          Начнем. Для начала монтируем накопитель, если он еще не примонтирован к системе:
+          <div class="code">
+            sudo mount /dev/sdX /mnt/
+          </div>
+        </div>
+        <div class="main_text">
+          Как именно будет выглядеть накопитель в <span class="code">/dev</span> зависит от типа накопителя. Я использовал ssd-диск. Отсюда и <span class="code">sdX</span>, где X буква, которая указана в <span class="code">/dev</span>.
+        </div>
+        <div class="main_text">
+          Так. Примонтировали? Идем дальше:
+          <div class="code">
+            tar -cvzpf /home/&lt;user&gt;/backup.tar.gz /*
+          </div>
+        </div>
+        <div class="main_text">
+          Опции <span class="code">tar</span>:
+          <div class="code">
+            <div class="code">
+              -c — создать архив,
+            </div>
+            <div class="code">
+              -v — вывод прогресса на экран,
+            </div>
+            <div class="code">
+              -z — сжимаем gzip,
+            </div>
+            <div class="code">
+              -p — сохраняем права доступа к файлам,
+            </div>
+            <div class="code">
+              -f — говорит, что нужно использовать вывод в файл.
+            </div>
+          </div>
+            Далее идет имя создаваемого файла с местом положения. Ну, и, наконец-то, то, что архивируем. А архивируем весь корневой каталог.
+        </div>
+        <div class="main_text">
+          Ждем, пока корневой каталог скопируется в архив.
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

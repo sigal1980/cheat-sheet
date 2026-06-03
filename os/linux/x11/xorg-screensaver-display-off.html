@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка - Xorg - отключаем выключение дисплея после простоя ПК</title>
+    <link rel=”icon” href=”../../../images/icon.png” type=”image/png”>
+    <link rel="stylesheet" href="../../../styles/content.css">
+    <script src="../../../scripts/main.js" defer></script>
+  </head>
+  <body>
+    <div>
+      <div class="menu">
+        <iframe class="left-iframe" src="../../../left-menu.html" id="left_menu"></iframe>
+      </div>
+      <div class="content">
+        <h3>Xorg - отключаем выключение дисплея после простоя ПК</h3>
+        <div class="main_text">
+          Решил добавить в шпаргалку данную тему.
+        </div>
+        <div class="main_text">
+          После установки LXDE и очистки ее от лишних инструментов (до этого был KDE и там что-то удалить можно только приведя саму KDE в нерабочее состояние), столкнулся с тем, что через 10 минут ПК отключает дисплей. Мне этого не нужно. Я задумался об отключении скринсейвера. Но как? Настройки системы в меню перерыл вдоль и поперек несколько раз. Ничего похожего на скринсейвер не нашел. Не знаю - может случайно удалил? Полез рыть интернет...
+        </div>
+        <div class="main_text">
+          Через N-ное количество попыток выяснить как это сделать, я понял, что не знаю какой компонент системы отвечает за это. Запросы в duckduckgo.com сыпались как снег. Один за другим. Ни один из них не привел к решению проблемы. Забросил - смирился. Через несколько дней опять приперло...
+        </div>
+        <div class="main_text">
+          И вот... При очередном запросе выпадает невзрачная ссылка на
+          <a href="https://www.reddit.com/r/linux4noobs/comments/ofsc6z/lxde_how_do_i_avoid_the_screen_turns_off_after/" target="_blank">Reddit</a>. Открыл. Вижу что-то новенькое. Первый ответ с предложением сконфигурировать <b>openbox</b> мне не помог.
+        </div>
+        <div class="main_text">
+          А вот второй... Предложение конфигурировать X11 помог. И так...
+        </div>
+        <div class="main_text">
+          Чтобы узнать, виноват ли X11, вводим команду в терминале:
+          <div class="code">
+            xset q
+          </div>
+          Смотрим на вывод. Если в секции <span class="code">Screen Saver</span> параметр <span class="code">timeout: 0</span>, то скорее всего виновник X11.
+        </div>
+        <div class="main_text">
+          Если это так, то открываем или создаем(если он отсутствует) файл и добавляем туда:
+          <div class="code">
+            /etc/X11/xorg.conf.d/screensaver.conf
+            <hr>
+            <div class="code">
+              Section "ServerFlags"
+              <div class="code">
+                Option "StandbyTime" "0"
+              </div>
+              <div class="code">
+                Option "SuspendTime" "0"
+              </div>
+              <div class="code">
+                Option "OffTime" "0"
+              </div>
+              <div class="code">
+                Option "BlankTime" "0"
+              </div>
+              EndSection
+            </div>
+          </div>
+        </div>
+        <div class="main_text">
+          Сохраняем. Перезагружаемся. Ждем. Мне помогло
+        </div>
+        <div class="main_text">
+          Для проверки снова вводим:
+          <div class="code">
+            xset q
+          </div>
+        </div>
+        <div class="main_text">
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

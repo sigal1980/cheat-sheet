@@ -13,8 +13,8 @@ html, body {
 
 .left-iframe {
   border: none;
-  height: 95vh;
   width: 170px;
+  box-sizing: border-box;
 }
 
 .content {
@@ -38,9 +38,12 @@ div.list ul {
   font-style: oblique;
 }
 
+.code {
+  background-color: #dadada;
+}
+
 div.code {
   padding: 5px 0px 5px 20px;
-  background-color: #dadada;
 }
 
 div.code div.code {
